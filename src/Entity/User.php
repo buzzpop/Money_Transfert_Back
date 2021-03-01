@@ -152,9 +152,15 @@ class User implements UserInterface
      */
     private $agency;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="userDepot")
+     */
+    private $transactions;
+
     public function __construct()
     {
         $this->depot = new ArrayCollection();
+        $this->transactions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -367,6 +373,36 @@ class User implements UserInterface
     public function setAgency(?Agency $agency): self
     {
         $this->agency = $agency;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Transaction[]
+     */
+    public function getTransactions(): Collection
+    {
+        return $this->transactions;
+    }
+
+    public function addTransaction(Transaction $transaction): self
+    {
+        if (!$this->transactions->contains($transaction)) {
+            $this->transactions[] = $transaction;
+            $transaction->setUserDepot($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTransaction(Transaction $transaction): self
+    {
+        if ($this->transactions->removeElement($transaction)) {
+            // set the owning side to null (unless already changed)
+            if ($transaction->getUserDepot() === $this) {
+                $transaction->setUserDepot(null);
+            }
+        }
 
         return $this;
     }
