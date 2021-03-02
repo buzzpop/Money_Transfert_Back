@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Client;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
@@ -63,11 +62,15 @@ class TransactionsController extends AbstractController
         if ($account->getBalance() < 5000){
             return $this->json("le depot ne peut pas etre effectué car le solde du compte est inferieur à 5000",403);
         }
+
         $code=$this->code();
         $comissions= $comissionsRepository->findAll();
         $comissions=$comissions[0];
         $data=$request->getContent();
         $dataTab= $serializer->decode($data,'json');
+        if ($account->getBalance() < $dataTab['amount'] ){
+            return $this->json("le solde est inferieur au montant demandé",403);
+        }
         $dataObject= $serializer->denormalize($dataTab, Transaction::class,true);
         $clientD= $serializer->denormalize($dataTab['clientD'], Client::class,true);
         $clientR= $serializer->denormalize($dataTab['clientR'], Client::class,true);
@@ -89,28 +92,38 @@ class TransactionsController extends AbstractController
         $manager->persist($dataObject);
         $manager->flush();
 
-        return $this->json('dépot effectué avec succés code de transaction: '.$code,200);
+        return $this->json(['Transaction Details'=>$dataObject],200,[],["groups"=>"print"]);
 
     }
+
+
+
 
     /**
-     * @Route(
-     * name="retrait",
-     * path="/api/admin/transactions/{id}/retrait_client",
-     * methods={"PUT"},
-     * defaults={
-     * "_controller"="\app\Controller\TransactionController::Retrait",
-     * "_api_resource_class"=Client::class,
-     * "_api_item_operation_name"="retrait"
-     * }
-     * )
-     *
+     * @Route("/api/admin/transactions/retrait_client", name="retrait",methods={"PUT"})
      * @Security("is_granted('ROLE_AdminAgence') or is_granted('ROLE_UserAgence')",message="permission non accodée")
      */
+    public function retrait (Request $request, SerializerInterface $serializer,
+                           TokenStorageInterface $tokenStorage,
+                           EntityManagerInterface $manager, TransactionRepository $transactionRepository)
+    {
 
-    public function Retrait (){
-        dd('ok');
-
+        $data = $request->getContent();
+        $dataTab = $serializer->decode($data,'json');
+        $transaction = $transactionRepository->findOneBy(["transactionCode"=>$dataTab['transactionCode']]);
+        if($transaction->getWithdrawalDate() != null || !$transaction){
+            return $this->json('withdrawal code is not valid',403);
+        }
+        $adminAgence = $tokenStorage->getToken()->getUser();
+        $account = $adminAgence->getAgency()->getAccount();
+        if($account->getBalance() < $transaction->getAmount()){
+            return $this->json('withdrawal not possible', 403);
+        }
+        $transaction->setWithdrawalDate(new \DateTime());
+        $account->setBalance($account->getBalance() + $transaction->getAmount());
+        $transaction->getClientRetrait()->setCni($dataTab['cni']);
+        $transaction->setUserRetrait($adminAgence);
+        $manager->flush();
+        return $this->json($transaction,200,[],["groups"=>"print"]);
     }
-
 }

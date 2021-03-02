@@ -14,21 +14,15 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *  @ApiResource(
  *     routePrefix="/admin",
  *     normalizationContext={"groups"={"trans:read"}},
- *     attributes={
- *  "denormalization_context"={"groups"={"t:write"}},
- * },
  *     collectionOperations={
  *     "depot"={
  *          "method"="POST",
  *          "route_name"="depot"
  *     }
  *     },
- *      itemOperations={
+ *       itemOperations={
  *     "get",
- *     "retrait"={
- *          "method"="PUT",
- *          "route_name"="retrait"
- *     },
+ *     "put",
  *     }
  * )
  */
@@ -43,25 +37,24 @@ class Client
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"trans:write"})
+     * @Groups({"print"})
      */
     private $firstname;
 
     /**
      * @ORM\Column(type="string", length=255)
-     *  @Groups({"t:write"})
+     * @Groups({"print"})
      */
     private $lastname;
 
     /**
      * @ORM\Column(type="integer")
-     *  @Groups({"t:write"})
+     * @Groups({"print"})
      */
     private $phone;
 
     /**
      * @ORM\Column(type="string", length=255,nullable=true)
-     *  @Groups({"t:write"})
      */
     private $cni;
 

@@ -7,6 +7,7 @@ use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\DepositRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=DepositRepository::class)
@@ -47,6 +48,10 @@ class Deposit
     /**
      * @ORM\Column(type="integer")
      * @Groups({"depot:read","depot:write"})
+     * @Assert\GreaterThanOrEqual(
+     *     value="0",
+     *     message="entrer une valeur positive"
+     * )
      */
     private $amount;
 

@@ -13,6 +13,12 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *   attributes={
  *  "denormalization_context"={"groups"={"transaction:write"}},
  * },
+ *     collectionOperations={
+ *          "get"
+ *     },
+ *     itemOperations={
+ *     "get"
+ *     }
  * )
  */
 class Transaction
@@ -26,13 +32,13 @@ class Transaction
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"transaction:write"})
+     * @Groups({"transaction:write","print"})
      */
     private $amount;
 
     /**
      * @ORM\Column(type="date")
-     * @Groups({"transaction:write"})
+     * @Groups({"transaction:write","print"})
      */
     private $depositDate;
 
@@ -50,7 +56,7 @@ class Transaction
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"transaction:write"})
+     * @Groups({"transaction:write","print"})
      */
     private $taxes;
 
@@ -80,7 +86,7 @@ class Transaction
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"transaction:write"})
+     * @Groups({"transaction:write","print"})
      */
     private $transactionCode;
 
@@ -88,25 +94,26 @@ class Transaction
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="transactions")
      * @Groups({"transaction:write"})
      * @ORM\JoinColumn(nullable=false)
+     *
      */
     private $userDepot;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="transactions")
-     * @Groups({"transaction:write"})
      */
     private $userRetrait;
 
     /**
      * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="transactions")
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"transaction:write"})
      */
     private $clientDepot;
 
     /**
      * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="transactions")
-     * @Groups({"transaction:write"})
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({"print"})
      */
     private $clientRetrait;
 
