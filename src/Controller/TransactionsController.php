@@ -126,4 +126,32 @@ class TransactionsController extends AbstractController
         $manager->flush();
         return $this->json($transaction,200,[],["groups"=>"print"]);
     }
+
+    /**
+     * @Route("/api/admin/transactions/cancelled", name="cancel",methods={"PUT"})
+     * @Security("is_granted('ROLE_AdminAgence') or is_granted('ROLE_UserAgence')",message="permission non accodée")
+     */
+
+    public function cancel (Request $request, SerializerInterface $serializer,
+                             TokenStorageInterface $tokenStorage,
+                             EntityManagerInterface $manager, TransactionRepository $transactionRepository)
+    {
+        $data = $request->getContent();
+        $dataTab = $serializer->decode($data,'json');
+        $transaction = $transactionRepository->findOneBy(["transactionCode"=>$dataTab['transactionCode']]);
+        if(!$transaction){
+            return $this->json('withdrawal code is not valid',403);
+        }
+        if ($transaction->getWithdrawalDate() != null ){
+            return $this->json('the deposit has already been withdrawn',403);
+        }
+        $transaction->setCancellationDate(new \DateTime());
+        $transactionAccount= $transaction->getAccount();
+        $transactionAccount->setBalance($transactionAccount->getBalance() + $transaction->getAmount());
+        $adminAgence= $tokenStorage->getToken()->getUser();
+        $transaction->setUserRetrait($adminAgence);
+        $manager->flush();
+        return $this->json('Transaction has been withdrawn', 200);
+
+    }
 }
