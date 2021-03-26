@@ -57,9 +57,13 @@ class AgencyDataPersister implements ContextAwareDataPersisterInterface
             $this->entityManager->flush();
         }
         if (isset($context['item_operation_name'])){
+            $content= ($this->request->getCurrentRequest()->getContent());
+            $content= $this->serializer->decode($content, 'json');
+            $data->getAccount()->setAccountNumber($content['account']['accountNumber']);
             $this->entityManager->persist($data);
             $this->entityManager->flush();
         }
+            return true;
 
     }
 

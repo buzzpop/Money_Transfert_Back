@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiSubresource;
 use App\Repository\AccountRepository;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -17,12 +18,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     routePrefix="/admin",
  *     denormalizationContext={"groups"={"compte:write"}},
  *     normalizationContext={"groups"={"compte:read"}},
- *     attributes={
- *   "security"="is_granted('ROLE_AdminSystem')",
- *   "security_message"="Ressource accessible que par l'Admin",
- * },
+ *
  *     collectionOperations={
- *     "get",
+ *     "get"={
+ *      "access_control"="(is_granted('ROLE_AdminAgence') or is_granted('ROLE_UserAgence')  or is_granted('ROLE_AdminSystem'))",
+ *     },
  *      "post"
  *     },
  *      itemOperations={
@@ -44,7 +44,7 @@ class Account
 
     /**
      * @ORM\Column(type="string")
-     * @Groups ({"compte:write","compte:read"})
+     * @Groups ({"user:read","compte:write","compte:read","agence:read"})
      */
     private $accountNumber;
 
@@ -68,6 +68,7 @@ class Account
 
     /**
      * @ORM\OneToOne(targetEntity=Agency::class, mappedBy="account", cascade={"persist", "remove"})
+     * @Groups ({"compte:read"})
      */
     private $agency;
 
@@ -82,16 +83,25 @@ class Account
     private $date;
 
     /**
-     * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="account")
+     * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="account_depot")
      */
-    private $transactions;
+    private $transaction_depot;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="account_retrait")
+     */
+    private $transaction_retrait;
+
+
 
     public function __construct()
     {
         $this->depot = new ArrayCollection();
 
-        $this->date= (new \DateTime());
-        $this->transactions = new ArrayCollection();
+        $this->date= (new DateTime());
+        $this->transaction_depot = new ArrayCollection();
+        $this->transaction_retrait = new ArrayCollection();
+
     }
 
     public function getId(): ?int
@@ -197,27 +207,57 @@ class Account
     /**
      * @return Collection|Transaction[]
      */
-    public function getTransactions(): Collection
+    public function getTransactionDepot(): Collection
     {
-        return $this->transactions;
+        return $this->transaction_depot;
     }
 
-    public function addTransaction(Transaction $transaction): self
+    public function addTransactionDepot(Transaction $transactionDepot): self
     {
-        if (!$this->transactions->contains($transaction)) {
-            $this->transactions[] = $transaction;
-            $transaction->setAccount($this);
+        if (!$this->transaction_depot->contains($transactionDepot)) {
+            $this->transaction_depot[] = $transactionDepot;
+            $transactionDepot->setAccountDepot($this);
         }
 
         return $this;
     }
 
-    public function removeTransaction(Transaction $transaction): self
+    public function removeTransactionDepot(Transaction $transactionDepot): self
     {
-        if ($this->transactions->removeElement($transaction)) {
+        if ($this->transaction_depot->removeElement($transactionDepot)) {
             // set the owning side to null (unless already changed)
-            if ($transaction->getAccount() === $this) {
-                $transaction->setAccount(null);
+            if ($transactionDepot->getAccountDepot() === $this) {
+                $transactionDepot->setAccountDepot(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Transaction[]
+     */
+    public function getTransactionRetrait(): Collection
+    {
+        return $this->transaction_retrait;
+    }
+
+    public function addTransactionRetrait(Transaction $transactionRetrait): self
+    {
+        if (!$this->transaction_retrait->contains($transactionRetrait)) {
+            $this->transaction_retrait[] = $transactionRetrait;
+            $transactionRetrait->setAccountRetrait($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTransactionRetrait(Transaction $transactionRetrait): self
+    {
+        if ($this->transaction_retrait->removeElement($transactionRetrait)) {
+            // set the owning side to null (unless already changed)
+            if ($transactionRetrait->getAccountRetrait() === $this) {
+                $transactionRetrait->setAccountRetrait(null);
             }
         }
 

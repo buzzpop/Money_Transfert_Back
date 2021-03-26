@@ -47,4 +47,17 @@ class DepositRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function getLastDepot($id)
+    {
+        return $this->createQueryBuilder('d')
+            ->innerJoin('d.user','u')
+            ->andWhere('u.id = :val')
+            ->setParameter('val', $id)
+            ->orderBy('d.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
 }

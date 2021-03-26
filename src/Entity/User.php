@@ -10,21 +10,24 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Annotation\ApiFilter;
+
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
+ *@ApiFilter(BooleanFilter::class, properties={"isArchived"})
  * @ApiResource(
  *      routePrefix="/admin",
  *     normalizationContext={"groups"={"user:read"}},
  *     denormalizationContext={"groups"={"users:write"}},
- *     attributes={
- *  "security"="is_granted('ROLE_AdminSystem')",
- * "security_message"="Ressource accessible que par l'Admin",
- * },
  *     collectionOperations={
- *     "get",
+ *     "get"={
+ *      "access_control"="(is_granted('ROLE_AdminSystem'))",
+ *     },
  *     "add_user"={
  * "method"="POST",
+ * "access_control"="(is_granted('ROLE_AdminSystem'))",
  * "route_name"="add_user",
  *      "deserialize"=false,
  *             "swagger_context"={
@@ -62,7 +65,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *                 },
  *             },
  *     },
- *     "delete"={"path"="/users/{id}"},
+ *     "delete"={"path"="/users/{id}",  "access_control"="(is_granted('ROLE_AdminSystem'))"},
+ *     "get",
  *     }
  * )
  */
@@ -72,7 +76,7 @@ class User implements UserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"user:read"})
+     * @Groups({"user:read","account:read","depot:read"})
      */
     private $id;
 
@@ -84,6 +88,7 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="json")
+     * @Groups({"user:read"})
      */
     private $roles = [];
 
@@ -96,7 +101,7 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="string", length=255)
-     *  @Groups({"user:read","users:write"})
+     *  @Groups({"user:read","users:write","depot:read"})
      */
     private $firstname;
 
@@ -120,7 +125,7 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="blob", nullable=true)
-     *  @Groups({"users:read","users:write"})
+     *  @Groups({"user:read","users:write","account:read"})
      */
     private $avatar;
 
@@ -151,6 +156,7 @@ class User implements UserInterface
 
     /**
      * @ORM\ManyToOne(targetEntity=Agency::class, inversedBy="users")
+     * @Groups({"user:read"})
      */
     private $agency;
 
@@ -194,7 +200,7 @@ class User implements UserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_'.$this->profil->getLibelle();
+        $roles["role"] = 'ROLE_'.$this->profil->getLibelle();
 
         return array_unique($roles);
     }
@@ -291,7 +297,10 @@ class User implements UserInterface
 
     public function getAvatar()
     {
-        return base64_encode(stream_get_contents( $this->avatar));
+        if ($this->avatar){
+            return base64_encode(stream_get_contents( $this->avatar));
+        }
+        return null;
     }
 
     public function setAvatar($avatar): self

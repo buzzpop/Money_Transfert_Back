@@ -9,20 +9,27 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Annotation\ApiFilter;
+
 
 /**
+ *@ApiFilter(BooleanFilter::class, properties={"isArchived"})
+
  * @ORM\Entity(repositoryClass=AgencyRepository::class)
  *  * @ApiResource(
  *     routePrefix="/admin",
  *     normalizationContext={"groups"={"agence:read"}},
  *     attributes={
- *   "security"="is_granted('ROLE_AdminSystem')",
- *   "security_message"="Ressource accessible que par l'Admin",
  *  "denormalization_context"={"groups"={"agence:write"}},
  * },
  *     collectionOperations={
- *     "get",
- *     "post",
+ *     "get"={
+ *      "access_control"="(is_granted('ROLE_AdminSystem') || is_granted('ROLE_Caissier'))"
+ *     },
+ *     "post"={
+ *       "access_control"="(is_granted('ROLE_AdminSystem'))"
+ *     }
  *     },
  *      itemOperations={
  *     "get",
@@ -45,7 +52,7 @@ class Agency
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"agence:read","agence:write"})
+     * @Groups({"agence:read","agence:write","user:read","compte:read"})
      */
     private $agencyName;
 
@@ -73,6 +80,7 @@ class Agency
      * @ORM\OneToOne(targetEntity=Account::class, inversedBy="agency", cascade={"persist", "remove"})
      * @ORM\JoinColumn(nullable=false)
      * @ApiSubresource()
+     *  @Groups({"agence:read","user:read"})
      *
      */
     private $account;

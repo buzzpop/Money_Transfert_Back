@@ -6,3 +6,6 @@ api_platform:
         multipart: ['multipart/form-data']
     swagger:
         versions: [3]
+    collection:
+        pagination:
+            page_parameter_name: page

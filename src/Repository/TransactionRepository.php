@@ -47,4 +47,65 @@ class TransactionRepository extends ServiceEntityRepository
         ;
     }
     */
+    public function getCommissionDepot(int $id)
+    {
+        return $this->createQueryBuilder('t')
+            ->innerJoin('t.account_depot', 'acc')
+            ->innerJoin('acc.agency', 'a')
+            ->andWhere('a.id = :value')
+            ->setParameter('value' , $id)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+
+    public function getCommissionRetrait(int  $id)
+    {
+        return $this->createQueryBuilder('t')
+            ->innerJoin('t.account_retrait', 'acc')
+            ->innerJoin('acc.agency', 'a')
+            ->andWhere('a.id = :value')
+            ->setParameter('value' , $id)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+    public function getTransDepotByUser(int  $id)
+    {
+        return $this->createQueryBuilder('t')
+            ->innerJoin('t.userDepot', 'u')
+            ->andWhere('u.id= :value')
+            ->setParameter('value' , $id)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+
+    public function getTransRetraitByUser(int  $id)
+    {
+        return $this->createQueryBuilder('t')
+            ->innerJoin('t.userRetrait', 'u')
+            ->andWhere('u.id= :value')
+            ->setParameter('value' , $id)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+
+    public function transactionAgence(int $id)
+    {
+        return $this->createQueryBuilder('t')
+            ->innerJoin('t.account_depot', 'ad')
+            ->innerJoin('t.account_retrait', 'ar')
+            ->innerJoin('ad.agency', 'a')
+            ->innerJoin('ar.agency', 'ag')
+            ->andWhere('a.id= :value')
+            ->andWhere('ag.id= :val')
+            ->setParameter('value' , $id)
+            ->setParameter('val' , $id)
+            ->getQuery()
+            ->getResult()
+            ;
+    }
+
 }

@@ -14,7 +14,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *  "denormalization_context"={"groups"={"transaction:write"}},
  * },
  *     collectionOperations={
- *          "get"
+ *          "get",
  *     },
  *     itemOperations={
  *     "get"
@@ -32,13 +32,13 @@ class Transaction
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"transaction:write","print"})
+     * @Groups({"transaction:write","print","clients"})
      */
     private $amount;
 
     /**
      * @ORM\Column(type="date")
-     * @Groups({"transaction:write","print"})
+     * @Groups({"transaction:write","print","clients"})
      */
     private $depositDate;
 
@@ -106,23 +106,29 @@ class Transaction
     /**
      * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="transactions")
      * @ORM\JoinColumn(nullable=false)
-     * @Groups({"transaction:write"})
+     * @Groups({"transaction:write","clients","print"})
      */
     private $clientDepot;
 
     /**
      * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="transactions")
      * @ORM\JoinColumn(nullable=false)
-     * @Groups({"print"})
+     * @Groups({"clients","print"})
      */
     private $clientRetrait;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Account::class, inversedBy="transactions")
-     * @Groups({"transaction:write"})
+     * @ORM\ManyToOne(targetEntity=Account::class, inversedBy="transaction_depot")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $account;
+    private $account_depot;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Account::class, inversedBy="transaction_retrait")
+     */
+    private $account_retrait;
+
+
 
     public function getId(): ?int
     {
@@ -143,7 +149,7 @@ class Transaction
 
     public function getDepositDate(): ?\DateTimeInterface
     {
-        return $this->depositDate;
+        return  $this->depositDate;
     }
 
     public function setDepositDate(\DateTimeInterface $depositDate): self
@@ -297,16 +303,30 @@ class Transaction
         return $this;
     }
 
-    public function getAccount(): ?Account
+    public function getAccountDepot(): ?Account
     {
-        return $this->account;
+        return $this->account_depot;
     }
 
-    public function setAccount(?Account $account): self
+    public function setAccountDepot(?Account $account_depot): self
     {
-        $this->account = $account;
+        $this->account_depot = $account_depot;
 
         return $this;
     }
+
+    public function getAccountRetrait(): ?Account
+    {
+        return $this->account_retrait;
+    }
+
+    public function setAccountRetrait(?Account $account_retrait): self
+    {
+        $this->account_retrait = $account_retrait;
+
+        return $this;
+    }
+
+
 
 }

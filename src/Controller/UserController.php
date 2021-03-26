@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Services\UserService;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -15,6 +16,8 @@ class UserController extends AbstractController
     public function __construct(UserService $userService){
         $this->userService= $userService;
     }
+
+
     /**
      * @Route(
      * name="add_user",
@@ -45,6 +48,8 @@ class UserController extends AbstractController
      * "_api_item_operation_name"="put_user"
      * }
      * )
+     * @Security("is_granted('ROLE_AdminSystem') or is_granted('ROLE_AdminAgence') or is_granted('ROLE_UserAgence')",message="permission non accodée")
+
      */
 
     public function putUser(Request $request, int $id)
@@ -53,4 +58,6 @@ class UserController extends AbstractController
 
             return $this->json("Utilisateur modifié",200);
     }
+
+
 }

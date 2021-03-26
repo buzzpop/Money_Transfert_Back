@@ -8,9 +8,14 @@ use App\Repository\DepositRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Annotation\ApiFilter;
+
 
 /**
  * @ORM\Entity(repositoryClass=DepositRepository::class)
+ *  *@ApiFilter(BooleanFilter::class, properties={"cancelled"})
+
  * @ApiResource(
  *     routePrefix="/admin",
  *     normalizationContext={"groups"={"depot:read"}},
@@ -65,6 +70,7 @@ class Deposit
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="depot")
      * @ORM\JoinColumn(nullable=false)
      * @ApiSubresource()
+     * @Groups({"depot:read"})
      */
     private $user;
 
@@ -74,6 +80,12 @@ class Deposit
      * @Groups({"depot:write"})
      */
     private $account;
+
+    /**
+     * @ORM\Column(type="boolean")
+     *  * @Groups({"depot:read"})
+     */
+    private $cancelled=false;
 
     public function __construct(){
         $this->date= (new \DateTime());
@@ -128,6 +140,18 @@ class Deposit
     public function setAccount(?Account $account): self
     {
         $this->account = $account;
+
+        return $this;
+    }
+
+    public function getCancelled(): ?bool
+    {
+        return $this->cancelled;
+    }
+
+    public function setCancelled(bool $cancelled): self
+    {
+        $this->cancelled = $cancelled;
 
         return $this;
     }

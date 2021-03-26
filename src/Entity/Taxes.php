@@ -28,7 +28,7 @@ class Taxes
     private $max;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="float")
      */
     private $taxe;
 
@@ -61,12 +61,12 @@ class Taxes
         return $this;
     }
 
-    public function getTaxe(): ?int
+    public function getTaxe(): ?float
     {
         return $this->taxe;
     }
 
-    public function setTaxe(int $taxe): self
+    public function setTaxe(float $taxe): self
     {
         $this->taxe = $taxe;
 

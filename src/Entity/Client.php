@@ -37,24 +37,25 @@ class Client
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"print"})
+     * @Groups({"print","clients"})
      */
     private $firstname;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"print"})
+     * @Groups({"print","clients"})
      */
     private $lastname;
 
     /**
      * @ORM\Column(type="integer")
-     * @Groups({"print"})
+     * @Groups({"print","clients"})
      */
     private $phone;
 
     /**
      * @ORM\Column(type="string", length=255,nullable=true)
+     * @Groups({"clients"})
      */
     private $cni;
 

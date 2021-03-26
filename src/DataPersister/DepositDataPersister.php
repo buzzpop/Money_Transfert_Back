@@ -9,6 +9,7 @@ use App\Entity\Deposit;
 use App\Entity\Profil;
 use App\Entity\User;
 use App\Repository\AccountRepository;
+use App\Repository\AgencyRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -22,13 +23,13 @@ class DepositDataPersister implements ContextAwareDataPersisterInterface
     private $request;
     private $serializer;
     private $token;
-    private $account;
+    private $agence;
     public  function __construct(EntityManagerInterface $entityManager, RequestStack $requestStack,
-                                 SerializerInterface $serializer,AccountRepository $accountRepository, TokenStorageInterface $tokenStorage){
+                                 SerializerInterface $serializer,AgencyRepository $agencyRepository, TokenStorageInterface $tokenStorage){
         $this->entityManager= $entityManager;
         $this->request= $requestStack;
         $this->serializer= $serializer;
-        $this->account= $accountRepository;
+        $this->agence= $agencyRepository;
         $this->token= $tokenStorage;
 
     }
@@ -47,7 +48,12 @@ class DepositDataPersister implements ContextAwareDataPersisterInterface
         if (isset($context['collection_operation_name'])){
             $content= $this->request->getCurrentRequest()->getContent();
             $content= $this->serializer->decode($content, 'json');
-           $account= $this->account->find($content['idA']);
+
+           $agence= $this->agence->find($content['idA']);
+           $account=$agence->getAccount();
+           if ($account->getBalance()> 50000){
+               return new JsonResponse('impossible',403);
+           }
            $account->setBalance($account->getBalance() + $content['amount']);
            $object= $this->serializer->denormalize($content, Deposit::class, true);
            $object->setAccount($account);
@@ -56,6 +62,7 @@ class DepositDataPersister implements ContextAwareDataPersisterInterface
            $this->entityManager->persist($object);
             $this->entityManager->flush();
         }
+        return new JsonResponse($object,200);
 
     }
 

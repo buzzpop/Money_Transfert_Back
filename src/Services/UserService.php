@@ -4,6 +4,7 @@
 namespace App\Services;
 
 use App\Entity\User;
+use App\Repository\AgencyRepository;
 use App\Repository\ProfilRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,18 +22,20 @@ class UserService
     private $serializer;
     private $encode;
     private $profilRepo;
+    private $agenceRepo;
     private $error;
     private $encoder;
     private $userRepo;
 
     public function __construct( EntityManagerInterface $manager, SerializerInterface $serializer, ValidatorInterface $validator,
-                                 UserPasswordEncoderInterface $encode,ProfilRepository $profilRepository,ErrorService $errorService,
+                                 UserPasswordEncoderInterface $encode,AgencyRepository $agenceRepository,ProfilRepository $profilRepository,ErrorService $errorService,
                                  UserPasswordEncoderInterface $passwordEncoder, UserRepository $repository){
 
         $this->manager=$manager;
         $this->serializer=$serializer;
         $this->encode=$encode;
         $this->profilRepo=$profilRepository;
+        $this->agenceRepo=$agenceRepository;
         $this->error=$errorService;
         $this->encoder=$passwordEncoder;
         $this->userRepo= $repository;
@@ -43,6 +46,10 @@ class UserService
        $typeUser=$this->profilRepo->find( (int)$dataUser['profil']);
 
         $userObject= $this->serializer->denormalize($dataUser,User::class,true);
+        if ($typeUser->getLibelle()=="AdminAgence"|| $typeUser->getLibelle()=="UserAgence"){
+            $agence= $this->agenceRepo->find((int)$dataUser['agence']);
+            $userObject->setAgency($agence);
+        }
 
         $userObject->setProfil($typeUser);
         $password = $userObject->getPassword();
@@ -67,7 +74,10 @@ class UserService
 
     public function putUser(Request $request, int $id){
         $dataUser= $request->request->all();
-        $profil=$this->profilRepo->find($dataUser['profil']);
+        if ($dataUser['profil']){
+            $profil=$this->profilRepo->find($dataUser['profil']);
+        }
+
         $typeUser=$this->userRepo->find($id);
         if ($typeUser){
             isset($dataUser['username']) ? $typeUser->setUsername($dataUser['username']) : true;
